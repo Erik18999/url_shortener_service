@@ -16,7 +16,7 @@
 
 ### 1. Создание короткой ссылки
 
-Пользователь отправляет `POST /api/v1/url-shortener/url` с телом `{ "url": "https://very-long-link.com/..." }`.
+Пользователь отправляет запрос: `POST /api/v1/url-shortener/url` с телом `{ "url": "https://very-long-link.com/..." }`.
 
 1. [`UrlController`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/controller/UrlController.java) принимает запрос, [`UrlDto`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/dto/UrlDto.java) валидируется аннотациями `@NotBlank` и `@Pattern` (регулярное выражение проверяет, что это действительно корректный `http(s)://` URL, а не пустая строка или случайный текст).
 2. Запрос передаётся в [`UrlService.createShortUrl()`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/service/UrlServiceImpl.java).
