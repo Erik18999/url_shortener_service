@@ -18,11 +18,11 @@
 
 Пользователь отправляет `POST /api/v1/url-shortener/url` с телом `{ "url": "https://very-long-link.com/..." }`.
 
-1. `UrlController` принимает запрос, `UrlDto` валидируется аннотациями `@NotBlank` и `@Pattern` (регулярное выражение проверяет, что это действительно корректный `http(s)://` URL, а не пустая строка или случайный текст).
-2. Запрос передаётся в `UrlService.createShortUrl()`.
-3. `UrlService` обращается в `HashCache.getHash()` — получает **уже готовый** хэш из внутреннего кэша (не генерирует новый на лету, это была бы медленная операция под нагрузкой).
-4. Полученная пара `hash → url` сохраняется одновременно в PostgreSQL (таблица `url`, через `UrlRepository`) и в Redis (через `UrlCacheRepository`, так как свежесозданная ссылка с высокой вероятностью будет запрошена сразу же).
-5. `UrlController` формирует полный короткий URL (базовый путь + хэш) и возвращает его пользователю с кодом `201 Created`.
+1. [`UrlController`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/controller/UrlController.java) принимает запрос, [`UrlDto`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/dto/UrlDto.java) валидируется аннотациями `@NotBlank` и `@Pattern` (регулярное выражение проверяет, что это действительно корректный `http(s)://` URL, а не пустая строка или случайный текст).
+2. Запрос передаётся в [`UrlService.createShortUrl()`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/service/UrlServiceImpl.java).
+3. `UrlService` обращается в [`HashCache.getHash()`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/cache/HashCacheImpl.java) — получает **уже готовый** хэш из внутреннего кэша (не генерирует новый на лету, это была бы медленная операция под нагрузкой).
+4. Полученная пара `hash → url` сохраняется сперва в PostgreSQL ([таблица](.../entity/Url.java) [`url`](.../V001_url_shortener-service_url_hash.sql), через [`UrlRepository`](.../UrlJdbcRepository.java)), а затем в Redis (через [`UrlCacheRepository`](.../UrlCacheRepositoryImpl.java), так как свежесозданная ссылка с высокой вероятностью будет запрошена сразу же).
+5. Когда все данные успешно сохранены, `UrlService` просто возвращает хэш в `UrlController`, который формирует из него [ответ](.../ShortUrlResponse.java) (полный короткий URL: статический адрес нашего сервиса + хэш. Например, `http://localhost:8080/api/v1/url-shortener/xz`) и возвращает его пользователю с кодом `201 Created`.
 
 ### 2. Переход по короткой ссылке
 
