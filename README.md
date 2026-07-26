@@ -24,15 +24,15 @@
 4. Полученная пара `hash → url` сохраняется сперва в PostgreSQL ([таблица](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/entity/Url.java) [`url`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/resources/db/changelog/changeset/V001_url_shortener-service_url_hash.sql), через [`UrlRepository`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/repository/UrlJdbcRepository.java)), а затем сохраняется в Redis (через [`UrlCacheRepository`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/repository/UrlCacheRepositoryImpl.java), так как свежесозданная ссылка с высокой вероятностью будет запрошена сразу же).
 5. Когда все данные успешно сохранены, `UrlService` просто возвращает хэш в `UrlController`, который формирует из него [ответ](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/dto/ShortUrlResponse.java) (полный короткий URL: статический адрес нашего сервиса + хэш. Например, `http://localhost:8080/api/v1/url-shortener/xz`) и возвращает его пользователю с кодом `201 Created`.
 
-### 2. Переход по короткой ссылке
+### 2. Переход по короткой ссылке на длинный (оригинальный) URL
 
-Пользователь переходит по `GET /api/v1/url-shortener/{hash}`.
+Пользователь отправляет запрос: `GET /api/v1/url-shortener/{hash}`.
 
-1. `UrlController` вынимает `hash` из пути и передаёт в `UrlService.getUrl()`.
-2. `UrlService` сначала проверяет **Redis** (`UrlCacheRepository`) — если хэш там есть, оригинальный URL возвращается моментально.
-3. Если в Redis не нашлось — идёт запрос в **PostgreSQL** (`UrlRepository`). Если URL найден в БД, он дополнительно кладётся в Redis (прогрев кэша), чтобы повторные переходы по этой же ссылке обслуживались мгновенно.
-4. Если хэша нет ни в Redis, ни в БД — выбрасывается `DataNotFoundException`, которую перехватывает `UrlExceptionHandler` и превращает в ответ `404 Not Found`.
-5. Если URL найден, `UrlController` оборачивает его в `RedirectView`, и пользователь получает `302 Found` с редиректом на оригинальный адрес.
+1. `UrlController` вынимает `hash` из пути и передаёт его в [`UrlService.getUrl(String hash)`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/service/UrlServiceImpl.java).
+2. `UrlService` сначала проверяет Redis ([`UrlCacheRepository.getUrlByHash(String hash)`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/repository/UrlCacheRepositoryImpl.java)) — если хэш там есть, оригинальный URL возвращается моментально.
+3. Если хэша в Redis не нашлось — идёт запрос в PostgreSQL ([`UrlRepository.findUrlByHash(String hash)`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/repository/UrlJdbcRepository.java)). Если URL найден в БД, он дополнительно кладётся в Redis (прогрев кэша), чтобы повторные переходы по этой же ссылке обслуживались мгновенно.
+4. Если хэша нет ни в Redis, ни в БД — выбрасывается [`DataNotFoundException`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/exception/DataNotFoundException.java), которую перехватывает [`UrlExceptionHandler`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/handler/UrlExceptionHandler.java) и превращает в ответ `404 Not Found`.
+5. Если оригинальный URL найден, `UrlController` оборачивает его в `RedirectView`, и пользователь получает `302 Found` с редиректом на оригинальный адрес.
 
 ### 3. Как устроен HashCache — сердце фичи
 
