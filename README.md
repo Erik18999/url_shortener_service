@@ -64,7 +64,7 @@
 Принцип работы данной джобы:
 
 1. Находит в БД (таблица [`url`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/resources/db/changelog/changeset/V001_url_shortener-service_url_hash.sql)) все ассоциации (URL-Hash) старше 1 года.
-2. Удаляет (с помощью `UrlRepository.deleteOldUrlsAndReturnHashes(LocalDateTime)`) их одним SQL-запросом с `DELETE ... RETURNING hash`, который атомарно и удаляет записи, и возвращает освободившиеся хэши.
+2. Удаляет (с помощью [`UrlRepository.deleteOldUrlsAndReturnHashes(LocalDateTime)`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/repository/UrlJdbcRepository.java)) их одним SQL-запросом с `DELETE ... RETURNING hash`, который атомарно и удаляет записи, и возвращает освободившиеся хэши.
 3. Эти освободившиеся хэши не выбрасываются, а переносятся обратно в БД (таблица `hash`) — то есть возвращаются в пул свободных хэшей для повторного использования. Т.о. мы экономим место, а наш сервис "UrlShortener" работает ещё оптимальнее.
 4. Вся операция выполняется в рамках одной транзакции ([`@Transactional`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/service/UrlServiceImpl.java)) — либо всё удаление и перенос хэшей проходит успешно, либо откатывается целиком.
 
