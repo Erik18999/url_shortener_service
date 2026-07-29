@@ -59,14 +59,16 @@
 
 ### 5. Переиспользование хэшей — очистка старых ссылок
 
-Раз в сутки (по cron-расписанию из конфига) запускается `CleanerScheduler`:
+Раз в сутки (по [cron-расписанию](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/resources/application.yaml) из конфига) запускается [`CleanerScheduler`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/scheduler/CleanerScheduler.java) - это класс, который содержит джобу запускающаяся по расписанию.
 
-1. Находит в таблице `url` все ассоциации старше 1 года.
-2. Удаляет их одним SQL-запросом с `DELETE ... RETURNING hash`, который атомарно и удаляет записи, и возвращает освободившиеся хэши.
-3. Эти хэши **не выбрасываются**, а переносятся обратно в таблицу `hash` — то есть возвращаются в пул свободных для повторного использования.
-4. Вся операция выполняется в рамках одной транзакции (`@Transactional`) — либо всё удаление и перенос хэшей проходит успешно, либо откатывается целиком.
+Принцип работы данной джобы:
 
-Так как исходная sequence в БД монотонно возрастает и никогда не выдаёт повторов, конфликтов между "новыми" и "переиспользованными" хэшами не возникает.
+1. Находит в БД (таблица [`url`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/resources/db/changelog/changeset/V001_url_shortener-service_url_hash.sql)) все ассоциации (URL-Hash) старше 1 года.
+2. Удаляет (с помощью `UrlRepository.deleteOldUrlsAndReturnHashes(LocalDateTime)`) их одним SQL-запросом с `DELETE ... RETURNING hash`, который атомарно и удаляет записи, и возвращает освободившиеся хэши.
+3. Эти освободившиеся хэши не выбрасываются, а переносятся обратно в БД (таблица `hash`) — то есть возвращаются в пул свободных хэшей для повторного использования. Т.о. мы экономим место, а наш сервис "UrlShortener" работает ещё оптимальнее.
+4. Вся операция выполняется в рамках одной транзакции ([`@Transactional`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/service/UrlServiceImpl.java)) — либо всё удаление и перенос хэшей проходит успешно, либо откатывается целиком.
+
+Так как исходная sequence в БД - это монотонно возрастающая последовательность и никогда не выдаёт повторов (дубликатов), конфликты между "новыми" и "переиспользованными" хэшами не возможны.
 
 ## Структура классов
 
