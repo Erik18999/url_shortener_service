@@ -45,8 +45,6 @@
 - **Прогрев при старте**: кэш заполняется (с помощью метода `init()`) сразу при старте приложения через `@PostConstruct`, а не ждёт первого запроса пользователя.
 - **Прогрев при старте**: кэш заполняется (с помощью метода `init()`) сразу при старте приложения через `@PostConstruct`, а не ждёт первого запроса пользователя.
 
-> ⚠️ **Потенциальное направление для улучшения**: в текущей реализации, записи в Redis ([`UrlCacheRepositoryImpl.save()`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/repository/UrlCacheRepositoryImpl.java)) сохраняются без TTL (времени жизни), то есть хранятся бессрочно и не синхронизированы с политикой очистки старых ссылок в PostgreSQL. Способ улучшения: можно задать TTL при сохранении в Redis (например, синхронизированный с `cleaner.older-than-years`, расположенный в [`application.yaml`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/resources/application.yaml)), чтобы запись автоматически удалялась по истечении указанного срока.
-
 ### 4. Как генерируются сами хэши — [`HashGenerator`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/generator/HashGeneratorImpl.java) (алгоритм [Base62](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/encoder/Base62Encoder.java))
 
 Когда [`HashCache`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/cache/HashCacheImpl.java) берёт батч (порция) хэшей из БД (с помощью [`HashRepository.getHashBatch()`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/repository/HashJdbcRepository.java)) и пополняет свой внутренний кэш (`ConcurrentLinkedQueue<String>`), он идёт в БД не за случайными значениями, а за гарантированно уникальными целыми числами:
@@ -72,6 +70,8 @@
 4. Вся операция выполняется в рамках одной транзакции ([`@Transactional`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/service/UrlServiceImpl.java)) — либо всё удаление и перенос хэшей проходит успешно, либо откатывается целиком.
 
 Так как исходная sequence в БД - это монотонно возрастающая последовательность и никогда не выдаёт повторов (дубликатов), конфликты между "новыми" и "переиспользованными" хэшами не возможны.
+
+> ⚠️ **Потенциальное направление для улучшения**: в текущей реализации, записи в Redis ([`UrlCacheRepositoryImpl.save()`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/repository/UrlCacheRepositoryImpl.java)) сохраняются без TTL (времени жизни), то есть хранятся бессрочно и не синхронизированы с политикой очистки старых ссылок в PostgreSQL. Способ улучшения: можно задать TTL при сохранении в Redis (например, синхронизированный с `cleaner.older-than-years`, расположенный в [`application.yaml`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/resources/application.yaml)), чтобы запись автоматически удалялась по истечении указанного срока.
 
 ## Структура классов
 
