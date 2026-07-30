@@ -71,6 +71,7 @@
 
 Так как исходная sequence в БД - это монотонно возрастающая последовательность и никогда не выдаёт повторов (дубликатов), конфликты между "новыми" и "переиспользованными" хэшами не возможны.
 
+
 > ⚠️ **Потенциальное направление для улучшения**: в текущей реализации, записи в Redis ([`UrlCacheRepositoryImpl.save()`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/repository/UrlCacheRepositoryImpl.java)) сохраняются без TTL (времени жизни), то есть хранятся бессрочно и не синхронизированы с политикой очистки старых ссылок в PostgreSQL. Способ улучшения: можно задать TTL при сохранении в Redis (например, синхронизированный с `cleaner.older-than-years`, расположенный в [`application.yaml`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/resources/application.yaml)), чтобы запись автоматически удалялась по истечении указанного срока.
 
 ## Структура классов
