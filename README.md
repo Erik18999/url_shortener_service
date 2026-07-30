@@ -43,6 +43,9 @@
 - **Асинхронное пополнение**: если заполненность ниже порога, запускается (с помощью метода `refillCache()`) асинхронное пополнение кэша из БД через отдельный [Executor](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/properties/HashCacheExecutorProperties.java), не блокируя текущий и последующие запросы — у сервиса ещё остаётся 20% хэшей "про запас", пока пополнение не завершится.
 - **Защита от повторного пополнения**: чтобы несколько потоков не запустили пополнение кэша одновременно (что было бы избыточной нагрузкой на БД), используется `AtomicBoolean` - `isRefilling`, с атомарной операцией `compareAndSet(false, true)` — гарантированно только один поток запускает процесс пополнения, остальные его просто пропускают, пока флаг не сброшен.
 - **Прогрев при старте**: кэш заполняется (с помощью метода `init()`) сразу при старте приложения через `@PostConstruct`, а не ждёт первого запроса пользователя.
+- **Потенциальное направление для улучшения**: в текущей реализации записи в Redis (`UrlCacheRepositoryImpl.save()`) сохраняются без TTL (времени жизни), то есть хранятся бессрочно и не синхронизированы с политикой очистки старых ссылок в PostgreSQL. Можно улучшить это двумя способами:
+  1. Задать TTL при сохранении в Redis (например, синхронизированный с `cleaner.older-than-years`), чтобы запись автоматически исчезала по истечении срока.
+  2. Явно удалять запись из Redis в момент очистки старых ссылок в `CleanerScheduler`, синхронно с удалением из PostgreSQL.
 
 ### 4. Как генерируются сами хэши — [`HashGenerator`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/generator/HashGeneratorImpl.java) (алгоритм [Base62](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/encoder/Base62Encoder.java))
 
