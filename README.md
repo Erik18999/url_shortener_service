@@ -89,8 +89,12 @@
 | [`HashRepository`](src/main/java/faang/school/urlshortenerservice/repository/HashRepository.java) / [`HashJdbcRepository`](src/main/java/faang/school/urlshortenerservice/repository/HashJdbcRepository.java) | Получение уникальных чисел из sequence, батчевое сохранение/извлечение свободных хэшей |
 | [`UrlCacheRepository`](src/main/java/faang/school/urlshortenerservice/repository/UrlCacheRepository.java) / [`UrlCacheRepositoryImpl`](src/main/java/faang/school/urlshortenerservice/repository/UrlCacheRepositoryImpl.java) | Кэширование популярных/недавних URL в Redis |
 | [`AsyncConfig`](src/main/java/faang/school/urlshortenerservice/config/context/async/AsyncConfig.java) | Именованный thread pool для асинхронной генерации хэшей |
+| [`CleanerProperties`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/properties/CleanerProperties.java) | Конфиг очистки: порог давности ссылок и cron-расписание |
+| [`HashBatchProperties`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/properties/HashBatchProperties.java) | Конфиг размеров батчей: сколько хэшей берёт кэш и сколько генерируется новых |
+| [`HashCacheProperties`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/properties/HashCacheProperties.java) | Конфиг `HashCache`: максимальный размер и порог пополнения |
+| [`HashCacheExecutorProperties`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/properties/HashCacheExecutorProperties.java) | Конфиг thread pool для пополнения `HashCache` |
+| [`ThreadPoolProperties`](https://github.com/Erik18999/url_shortener_service/blob/werewolf-stream8-erkin/src/main/java/faang/school/urlshortenerservice/properties/ThreadPoolProperties.java) | Конфиг thread pool для асинхронной генерации хэшей |
 | [`UrlExceptionHandler`](src/main/java/faang/school/urlshortenerservice/handler/UrlExceptionHandler.java) | Глобальный обработчик исключений |
-| [`Url`](src/main/java/faang/school/urlshortenerservice/entity/Url.java) | JPA-сущность ассоциации хэш ↔ URL |
 
 ## Тестирование
 
