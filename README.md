@@ -115,7 +115,7 @@
 - MapStruct
 - SpringDoc OpenAPI (Swagger)
 - Testcontainers (PostgreSQL, Redis)
-- JUnit 5, Mockito, AssertJ
+- JUnit 5, Mockito
 
 ## Конфигурация
 
